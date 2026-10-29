@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#17132d">
+  <title>Fractured Reality Pick 2 Limited Draft</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f8f7ff;
+      --muted: #aaa6bd;
+      --panel: rgba(28, 24, 49, .86);
+      --edge: rgba(255, 255, 255, .12);
+      --common: #c9ced8;
+      --uncommon: #88c7dc;
+      --rare: #f0c963;
+      --mythic: #ff7a45;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font: 16px/1.4 system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 10% 0%, #51346f 0, transparent 30%),
+        radial-gradient(circle at 90% 5%, #174a64 0, transparent 30%),
+        linear-gradient(145deg, #0e0c19, #17132d 55%, #0d1722);
+    }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    .shell { width: min(1100px, 100%); margin: auto; padding: 22px 14px 60px; }
+    header { padding: 10px 2px 18px; }
+    h1 { margin: 0; font-size: clamp(1.7rem, 6vw, 3.4rem); letter-spacing: -.045em; }
+    header p { margin: 6px 0 0; color: var(--muted); }
+    .rainbow { height: 5px; margin-top: 16px; border-radius: 8px; background: linear-gradient(90deg,#fff6b5,#66b8ff,#9f75d7,#ff6464,#70d67c,#c8c8d2); }
+    .toolbar { position: sticky; top: 0; z-index: 5; padding: 10px 0; backdrop-filter: blur(14px); }
+    .tabs { display: grid; grid-template-columns: repeat(4,1fr); gap: 7px; }
+    .tab, .retry {
+      border: 1px solid var(--edge); border-radius: 13px; background: #211c39;
+      padding: 10px 8px; cursor: pointer; font-weight: 750;
+    }
+    .tab.active { color: #171322; background: linear-gradient(120deg,#ffcf67,#ff83ba); border-color: transparent; }
+    .search { width: 100%; margin-top: 8px; border: 1px solid var(--edge); border-radius: 13px; background: #12101f; color: var(--ink); padding: 11px 13px; }
+    .status { color: var(--muted); padding: 22px 3px; }
+    .method { margin: 13px 0; padding: 11px 13px; border: 1px solid var(--edge); border-radius: 13px; color: var(--muted); background: rgba(15,13,26,.7); font-size: .86rem; }
+    .color-filters { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px; }
+    .color-filter { min-width: 42px; border: 1px solid var(--edge); border-radius: 999px; padding: 7px 10px; background: #211c39; cursor: pointer; }
+    .color-filter.active { color: #151122; background: var(--card-color); border-color: transparent; font-weight: 800; }
+    .slot-title { display: flex; align-items: center; gap: 9px; margin: 20px 0 8px; font-size: .96rem; }
+    .slot-title::after { content: ""; height: 1px; flex: 1; background: var(--edge); }
+    .score { color: #92e7a4; }
+    .rarity { margin: 20px 0 26px; }
+    .rarity-title { display: flex; align-items: center; gap: 9px; margin: 0 0 8px; font-size: .9rem; letter-spacing: .14em; text-transform: uppercase; }
+    .rarity-title::after { content: ""; height: 1px; flex: 1; background: var(--edge); }
+    .gem { width: 14px; height: 14px; transform: rotate(45deg); border-radius: 3px; background: var(--rarity-color); box-shadow: 0 0 13px var(--rarity-color); }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill,minmax(245px,1fr)); gap: 7px; }
+    .card {
+      width: 100%; display: grid; grid-template-columns: 13px minmax(0,1fr) auto; align-items: center; gap: 9px;
+      text-align: left; border: 1px solid var(--edge); border-radius: 12px; background: var(--panel); padding: 10px;
+      cursor: pointer; transition: transform .14s ease, border-color .14s ease, background .14s ease;
+    }
+    .card:hover, .card:focus-visible { transform: translateY(-2px); border-color: rgba(255,255,255,.35); background: #2b2547; outline: none; }
+    .color-dot { width: 12px; height: 24px; border-radius: 9px; background: var(--card-color); box-shadow: 0 0 10px var(--card-color); }
+    .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 760; }
+    .sub { display: block; color: var(--muted); font-size: .76rem; font-weight: 500; }
+    .mana { color: #fff3c4; font: 700 .78rem ui-monospace, monospace; white-space: nowrap; }
+    .w { --card-color: #fff0a8; } .u { --card-color: #55b8ff; } .b { --card-color: #a476d2; }
+    .r { --card-color: #ff6257; } .g { --card-color: #5ddd78; } .c { --card-color: #b8bec9; }
+    .multi { --card-color: linear-gradient(#ffe075,#59bfff,#af7ce6,#ff665e,#66dc7e); }
+    dialog { width: min(760px, calc(100% - 20px)); max-height: calc(100vh - 20px); padding: 0; border: 1px solid var(--edge); border-radius: 20px; color: var(--ink); background: #171426; box-shadow: 0 30px 100px #000; }
+    dialog::backdrop { background: rgba(4,3,10,.82); backdrop-filter: blur(5px); }
+    .modal { display: grid; grid-template-columns: minmax(190px, 42%) 1fr; }
+    .art { width: 100%; height: 100%; min-height: 340px; object-fit: cover; background: #090811; }
+    .info { padding: 22px; overflow: auto; }
+    .info h2 { margin: 0 34px 3px 0; line-height: 1.05; }
+    .meta { color: #ffd479; font-weight: 700; }
+    .type { color: var(--muted); margin: 12px 0; }
+    .oracle { white-space: pre-line; padding: 14px; border: 1px solid var(--edge); border-radius: 12px; background: #0f0d1a; }
+    .chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 12px 0; }
+    .chip { padding: 4px 8px; border: 1px solid var(--edge); border-radius: 999px; color: #d9d5e7; font-size: .78rem; }
+    .close { position: absolute; right: 12px; top: 12px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: #332c50; cursor: pointer; }
+    .link { display: inline-block; margin-top: 12px; color: #8ed6ff; }
+    @media (max-width: 600px) {
+      .shell { padding-top: 12px; }
+      .tab { font-size: .82rem; }
+      .modal { display: block; }
+      .art { display: block; height: auto; min-height: 0; max-height: 52vh; object-fit: contain; background: #080710; }
+      .info { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <h1>Fractured Reality Pick 2</h1>
+      <p id="api-status">Connecting to the live Scryfall API...</p>
+      <div class="rainbow"></div>
+    </header>
+    <div class="toolbar">
+      <nav class="tabs" aria-label="Card categories">
+        <button class="tab active" data-view="wipes">Board wipes</button>
+        <button class="tab" data-view="removal">Removal</button>
+        <button class="tab" data-view="survivors">Toughness 4+</button>
+        <button class="tab" data-view="value">Best value</button>
+      </nav>
+      <input class="search" id="search" type="search" placeholder="Search cards, colors, skills..." aria-label="Search cards">
+    </div>
+    <div id="content"><p class="status">Loading the FRA card gallery from Scryfall...</p></div>
+  </main>
+
+  <dialog id="details">
+    <button class="close" aria-label="Close">X</button>
+    <div class="modal">
+      <img class="art" id="art" alt="">
+      <section class="info">
+        <h2 id="detail-name"></h2>
+        <div class="meta" id="detail-meta"></div>
+        <div class="type" id="detail-type"></div>
+        <div class="chips" id="detail-chips"></div>
+        <div class="oracle" id="detail-oracle"></div>
+        <a class="link" id="scryfall-link" target="_blank" rel="noopener">Open on Scryfall</a>
+      </section>
+    </div>
+  </dialog>
+
+  <script>
+    const API = "https://api.scryfall.com/cards/search?q=set%3Afra&unique=cards&order=set";
+    const rarityOrder = ["common", "uncommon", "rare", "mythic"];
+    const rarityLabels = {common:"Common - likely pulls", uncommon:"Uncommon", rare:"Rare", mythic:"Mythic"};
+    const rarityColors = {common:"var(--common)", uncommon:"var(--uncommon)", rare:"var(--rare)", mythic:"var(--mythic)"};
+    const boardWipes = new Set([
+      "Kindred Judgment", "Overwrite the Multiverse", "Rise of the Deathbringer",
+      "The Echoverse Fulcrum", "Ajani Unrelenting", "Fulminous Forte"
+    ]);
+    const removal = new Set([
+      "Prophesied End", "Your Fate Ends Here", "Extended Absence", "Terminal Criticism",
+      "Essence Burn", "Fulminous Forte", "Violent Echoes", "Wrath of the Bloodmane",
+      "Compel Brutality", "Flourishing Grapple", "Konstrari Charm", "Stingerquill Charm",
+      "Vigorbloom Charm", "Vindictive Triumph", "Refute Destiny", "Surgical Precision",
+      "Silence the Echo", "Vraska's Final Mercy", "Awaken the Inferno", "No Admittance",
+      "Twisted Fates", "Memory Trap", "Lich's Relic", "Ajani's Anguish",
+      "Tether Technician", "Budding Insurgent", "Sureshot Sower", "Craftwork Crusher",
+      "Mind Meanderer", "Solitary Cell", "Warrior's Blades", "Archive Arbiter",
+      "Gideon's Memorial", "Chandra, Torch of Defiance", "Yoshimaru, Scrappy Stray",
+      "Vraska, the Cutting Glare", "Ajani Unrelenting"
+    ]);
+    const skillNames = [
+      "Flying", "Vigilance", "Lifelink", "Trample", "Double strike", "First strike",
+      "Prowess", "Menace", "Reach", "Haste", "Flash", "Deathtouch", "Hexproof",
+      "Indestructible", "Ward", "Defender", "Basic landcycling", "Prepared", "Threshold"
+    ];
+    const state = {cards: [], view: "wipes", query: "", color: "W"};
+    const content = document.querySelector("#content");
+    const dialog = document.querySelector("#details");
+
+    function faces(card) { return card.card_faces || [card]; }
+    function creatureFaces(card) {
+      return faces(card).filter(face => face.type_line?.includes("Creature") && Number(face.toughness) > 3);
+    }
+    function colorsFor(card, face) {
+      const colors = face?.colors || card.colors || [];
+      if (colors.length > 1) return {css:"multi", label:"Multicolor"};
+      const color = colors[0] || "C";
+      return {css:color.toLowerCase(), label:{W:"White",U:"Blue",B:"Black",R:"Red",G:"Green",C:"Colorless"}[color]};
+    }
+    function speed(card) {
+      const type = card.type_line || "";
+      if (type.includes("Instant")) return "Instant";
+      if (type.includes("Sorcery")) return "Sorcery";
+      if (card.name === "The Echoverse Fulcrum" || card.name === "Budding Insurgent") return "Sorcery-speed ability";
+      if (type.includes("Planeswalker")) return "Loyalty ability";
+      return "Ability";
+    }
+    function skills(face) {
+      const text = face.oracle_text || "";
+      return skillNames.filter(skill => new RegExp(`\\b${skill.replace(" ", "\\s+")}\\b`, "i").test(text));
+    }
+    const availability = {
+      common:{factor:1, label:"High"}, uncommon:{factor:.62, label:"Medium"},
+      rare:{factor:.24, label:"Low"}, mythic:{factor:.12, label:"Very low"}
+    };
+    function primaryFace(card) { return card.card_faces?.[0] || card; }
+    function manaValue(cost="") {
+      return [...cost.matchAll(/\{([^}]+)\}/g)].reduce((sum, [,symbol]) => {
+        if (/^\d+$/.test(symbol)) return sum + Number(symbol);
+        if (symbol === "X") return sum;
+        if (/^2\//.test(symbol)) return sum + 2;
+        return sum + 1;
+      }, 0);
+    }
+    function colorKey(card, face=primaryFace(card)) {
+      const colors = face.colors || card.colors || [];
+      return colors.length > 1 ? "M" : (colors[0] || "C");
+    }
+    function powerScore(card, face=primaryFace(card)) {
+      const text = faces(card).map(item => item.oracle_text || "").join(" ").toLowerCase();
+      const mv = Math.max(1, manaValue(face.mana_cost || card.mana_cost));
+      let score = 42;
+      if (face.type_line?.includes("Creature")) {
+        const power = Number(face.power), toughness = Number(face.toughness);
+        if (Number.isFinite(power) && Number.isFinite(toughness)) score += Math.max(-10, Math.min(16, (power + toughness - mv * 2) * 2));
+      }
+      const weights = {flying:6, vigilance:2, lifelink:4, trample:2, "double strike":8,
+        "first strike":3, prowess:3, menace:3, reach:1, haste:3, flash:2,
+        deathtouch:5, hexproof:5, indestructible:6, ward:3};
+      for (const [skill, weight] of Object.entries(weights)) if (text.includes(skill)) score += weight;
+      if (/destroy target|exile target/.test(text)) score += 14;
+      if (/deals? [3-9x] damage to (?:any|target)/.test(text)) score += 11;
+      else if (/deals? [12] damage to (?:any|target)/.test(text)) score += 5;
+      if (/fight(?:s)? (?:up to )?(?:one )?target/.test(text)) score += 7;
+      if (/draw (?:a|one) card/.test(text)) score += 5;
+      if (/draw (?:two|three|x) cards/.test(text)) score += 9;
+      if (/create (?:a|one|two|three|x)/.test(text)) score += 4;
+      if (/destroy all creatures|exile all creatures|all creatures get -/.test(text)) score += 18;
+      if (card.type_line?.includes("Instant")) score += 2;
+      return Math.max(20, Math.min(98, Math.round(score)));
+    }
+    function valueEntry(card) {
+      const face = primaryFace(card);
+      const power = powerScore(card, face);
+      const pull = availability[card.rarity] || availability.rare;
+      const value = Math.round(power * (.72 + .28 * pull.factor));
+      return {card, face, analysis:{power, value, pull:pull.label, mv:manaValue(face.mana_cost || card.mana_cost)}};
+    }
+    function entries() {
+      if (state.view === "wipes") return state.cards.filter(card => boardWipes.has(card.name)).map(card => ({card}));
+      if (state.view === "removal") return state.cards.filter(card => removal.has(card.name)).map(card => ({card}));
+      return state.cards.flatMap(card => creatureFaces(card).map(face => ({card, face})));
+    }
+    function imageFor(card, face) {
+      return face?.image_uris?.normal || card.image_uris?.normal || card.card_faces?.find(item => item.image_uris)?.image_uris.normal || "";
+    }
+    function render() {
+      if (state.view === "value") return renderValue();
+      const query = state.query.toLowerCase();
+      const filtered = entries().filter(({card, face}) => {
+        const haystack = [card.name, face?.name, card.type_line, face?.type_line, card.oracle_text, face?.oracle_text, ...(card.keywords || [])].join(" ").toLowerCase();
+        return haystack.includes(query);
+      });
+      if (!filtered.length) {
+        content.innerHTML = `<p class="status">No matching cards. The goblins checked twice.</p>`;
+        return;
+      }
+      const indexed = filtered.map((entry, index) => ({...entry, index}));
+      content.innerHTML = rarityOrder.map(rarity => {
+        const group = indexed.filter(entry => entry.card.rarity === rarity).sort((a,b) => a.card.name.localeCompare(b.card.name));
+        if (!group.length) return "";
+        const cards = group.map(entry => cardButton(entry, entry.index)).join("");
+        return `<section class="rarity" style="--rarity-color:${rarityColors[rarity]}">
+          <h2 class="rarity-title"><span class="gem"></span>${rarityLabels[rarity]} (${group.length})</h2>
+          <div class="cards">${cards}</div></section>`;
+      }).join("");
+      content.querySelectorAll(".card").forEach(button => button.addEventListener("click", () => openDetails(filtered[Number(button.dataset.entry)])));
+    }
+    function renderValue() {
+      const query = state.query.toLowerCase();
+      const labels = {W:"White", U:"Blue", B:"Black", R:"Red", G:"Green", C:"Colorless", M:"Multicolor"};
+      const css = {W:"w", U:"u", B:"b", R:"r", G:"g", C:"c", M:"multi"};
+      const candidates = state.cards
+        .filter(card => !primaryFace(card).type_line?.includes("Land") && colorKey(card) === state.color)
+        .map(valueEntry)
+        .filter(({card, face}) => [card.name, face.oracle_text, face.type_line].join(" ").toLowerCase().includes(query));
+      const shown = [];
+      const costs = [...new Set(candidates.map(entry => entry.analysis.mv))].sort((a,b) => a-b);
+      const filters = Object.keys(labels).map(key => `<button class="color-filter ${css[key]} ${state.color===key?"active":""}" data-color="${key}">${labels[key]}</button>`).join("");
+      const slots = costs.map(cost => {
+        const best = candidates.filter(entry => entry.analysis.mv === cost)
+          .sort((a,b) => b.analysis.value-a.analysis.value || b.analysis.power-a.analysis.power).slice(0,3);
+        const cards = best.map(entry => { const index=shown.push(entry)-1; return cardButton(entry,index); }).join("");
+        return `<section><h2 class="slot-title">Mana value ${cost}</h2><div class="cards">${cards}</div></section>`;
+      }).join("");
+      content.innerHTML = `<div class="method"><strong>Limited scouting model:</strong> Power grades stats, removal, evasion, card advantage and speed. Value discounts uncommon, rare and mythic cards by relative pull likelihood. These are transparent estimates, not game win-rate data.</div><div class="color-filters">${filters}</div>${slots || '<p class="status">No matching cards.</p>'}`;
+      content.querySelectorAll(".color-filter").forEach(button => button.addEventListener("click", () => {state.color=button.dataset.color; render();}));
+      content.querySelectorAll(".card").forEach(button => button.addEventListener("click", () => openDetails(shown[Number(button.dataset.entry)])));
+    }
+    function cardButton({card, face, analysis}, index) {
+      const color = colorsFor(card, face);
+      const shownFace = face || card;
+      const pt = analysis ? `${card.rarity.toUpperCase()} · Power ${analysis.power} · Pull ${analysis.pull} · Value ${analysis.value}` : (face ? `${face.power}/${face.toughness}` : speed(card));
+      const name = face?.name || card.name;
+      const mana = shownFace.mana_cost || card.mana_cost || "No mana";
+      return `<button class="card ${color.css}" data-entry="${index}" title="Open ${name}">
+        <span class="color-dot"></span><span class="name">${name}<small class="sub">${color.label} · ${pt}</small></span><span class="mana">${mana}</span></button>`;
+    }
+    function openDetails({card, face}) {
+      const shownFace = face || card;
+      const color = colorsFor(card, face);
+      document.querySelector("#detail-name").textContent = face?.name || card.name;
+      document.querySelector("#detail-meta").textContent = `${color.label} · ${card.rarity.toUpperCase()} · ${shownFace.mana_cost || card.mana_cost || "No mana cost"}`;
+      document.querySelector("#detail-type").textContent = shownFace.type_line || card.type_line;
+      document.querySelector("#detail-oracle").textContent = shownFace.oracle_text || card.oracle_text || "No rules text.";
+      const tags = state.view === "survivors" ? skills(shownFace) : [speed(card), ...(card.keywords || [])];
+      if (state.view === "value") {
+        const analysis = valueEntry(card).analysis;
+        tags.unshift(`Value ${analysis.value}`, `Pull ${analysis.pull}`, `Power ${analysis.power}`, `Mana value ${analysis.mv}`);
+      }
+      document.querySelector("#detail-chips").innerHTML = [...new Set(tags)].map(tag => `<span class="chip">${tag}</span>`).join("");
+      const art = document.querySelector("#art");
+      art.src = imageFor(card, face); art.alt = `${face?.name || card.name} card artwork`;
+      document.querySelector("#scryfall-link").href = card.scryfall_uri;
+      dialog.showModal();
+    }
+    async function loadCards() {
+      try {
+        let next = API;
+        while (next) {
+          const response = await fetch(next, {headers:{Accept:"application/json"}});
+          if (!response.ok) throw new Error(`Scryfall returned ${response.status}`);
+          const page = await response.json();
+          state.cards.push(...page.data); next = page.has_more ? page.next_page : null;
+          if (next) await new Promise(resolve => setTimeout(resolve, 120));
+        }
+        document.querySelector("#api-status").textContent = `${state.cards.length} unique FRA cards loaded live from Scryfall. Tap a card for rules and artwork.`;
+        render();
+      } catch (error) {
+        document.querySelector("#api-status").textContent = "Scryfall connection failed. Retry below.";
+        content.innerHTML = `<p class="status">Could not load Scryfall: ${error.message}<br><button class="retry">Retry</button></p>`;
+        content.querySelector(".retry").addEventListener("click", () => { state.cards=[]; loadCards(); });
+      }
+    }
+    document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
+      document.querySelector(".tab.active").classList.remove("active"); tab.classList.add("active"); state.view=tab.dataset.view; render();
+    }));
+    document.querySelector("#search").addEventListener("input", event => { state.query=event.target.value.trim(); render(); });
+    document.querySelector(".close").addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
+    loadCards();
+  </script>
+</body>
+</html>
