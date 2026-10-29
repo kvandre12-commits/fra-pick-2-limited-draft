@@ -1,7 +1,7 @@
 ---
 name: fra-pick-2-limited-draft
 description: FRA Fractured Reality Pick 2 Limited Draft assistant and website. Use for FRA draft picks, sealed deck choices, removal, board wipes, sturdy creatures, mana-curve comparisons, pull likelihood, card lookup, or launching and maintaining the bundled Scryfall-powered FRA card finder.
-version: "1.0.0"
+version: "1.1.0"
 author: Kurtis and SharpEdge
 tags:
   - magic-the-gathering
@@ -53,7 +53,7 @@ The app loads all unique `set:fra` cards from the live Scryfall API and offers:
 2. **Removal** with card speed shown as Instant, Sorcery, or ability.
 3. **Toughness 4+** creatures and their relevant combat skills.
 4. **Best value** rankings by color and mana value.
-5. Search, card artwork, Oracle text, rarity, mana cost, and Scryfall links.
+5. A responsive card-image gallery; each image opens Oracle text, rarity, mana cost, larger artwork, and a Scryfall link.
 
 The bundled HTML is the source of truth for the app’s curated wipe/removal
 lists and scoring implementation. Read it before changing classifications or

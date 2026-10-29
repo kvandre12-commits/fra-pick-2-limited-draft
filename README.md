@@ -4,13 +4,16 @@ A mobile-friendly FRA Limited scouting website and portable Code Puppy skill.
 It loads the current `set:fra` card gallery from Scryfall and organizes useful
 information for Pick 2 draft and sealed-deck decisions.
 
+**Use the live site:** <https://kvandre12-commits.github.io/fra-pick-2-limited-draft/>
+
 ## Features
 
 - Board wipes and targeted removal grouped by rarity
 - Removal speed identified as Instant, Sorcery, or ability
 - Creatures with toughness 4+ and relevant combat abilities
 - Heuristic Best Value rankings by color and mana value
-- Search, Oracle text, card artwork, mana costs, and Scryfall links
+- Responsive card-image tiles that open the full detail view
+- Search, Oracle text, larger artwork, mana costs, and Scryfall links
 - Framework-free static HTML that works on mobile
 
 Power, Pull, and Value grades are transparent scouting heuristics—not game

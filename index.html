@@ -55,17 +55,19 @@
     .rarity-title { display: flex; align-items: center; gap: 9px; margin: 0 0 8px; font-size: .9rem; letter-spacing: .14em; text-transform: uppercase; }
     .rarity-title::after { content: ""; height: 1px; flex: 1; background: var(--edge); }
     .gem { width: 14px; height: 14px; transform: rotate(45deg); border-radius: 3px; background: var(--rarity-color); box-shadow: 0 0 13px var(--rarity-color); }
-    .cards { display: grid; grid-template-columns: repeat(auto-fill,minmax(245px,1fr)); gap: 7px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill,minmax(150px,1fr)); gap: 12px; }
     .card {
-      width: 100%; display: grid; grid-template-columns: 13px minmax(0,1fr) auto; align-items: center; gap: 9px;
-      text-align: left; border: 1px solid var(--edge); border-radius: 12px; background: var(--panel); padding: 10px;
-      cursor: pointer; transition: transform .14s ease, border-color .14s ease, background .14s ease;
+      width: 100%; display: flex; flex-direction: column; gap: 7px; text-align: left;
+      border: 1px solid var(--edge); border-radius: 14px; background: var(--panel); padding: 6px;
+      cursor: pointer; overflow: hidden; transition: transform .14s ease, border-color .14s ease, background .14s ease;
     }
-    .card:hover, .card:focus-visible { transform: translateY(-2px); border-color: rgba(255,255,255,.35); background: #2b2547; outline: none; }
-    .color-dot { width: 12px; height: 24px; border-radius: 9px; background: var(--card-color); box-shadow: 0 0 10px var(--card-color); }
-    .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 760; }
-    .sub { display: block; color: var(--muted); font-size: .76rem; font-weight: 500; }
-    .mana { color: #fff3c4; font: 700 .78rem ui-monospace, monospace; white-space: nowrap; }
+    .card:hover, .card:focus-visible { transform: translateY(-4px); border-color: rgba(255,255,255,.42); background: #2b2547; outline: none; }
+    .card-thumb { width: 100%; aspect-ratio: 488 / 680; display: block; border-radius: 10px; object-fit: cover; background: #090811; }
+    .card-caption { min-width: 0; display: grid; grid-template-columns: 8px minmax(0,1fr); align-items: stretch; gap: 7px; padding: 1px 3px 4px; }
+    .color-dot { width: 8px; min-height: 42px; border-radius: 9px; background: var(--card-color); box-shadow: 0 0 10px var(--card-color); }
+    .name { min-width: 0; font-weight: 760; line-height: 1.2; }
+    .sub { display: block; margin-top: 3px; color: var(--muted); font-size: .7rem; font-weight: 500; line-height: 1.25; }
+    .mana { display: block; margin-top: 3px; overflow: hidden; color: #fff3c4; font: 700 .72rem ui-monospace, monospace; text-overflow: ellipsis; white-space: nowrap; }
     .w { --card-color: #fff0a8; } .u { --card-color: #55b8ff; } .b { --card-color: #a476d2; }
     .r { --card-color: #ff6257; } .g { --card-color: #5ddd78; } .c { --card-color: #b8bec9; }
     .multi { --card-color: linear-gradient(#ffe075,#59bfff,#af7ce6,#ff665e,#66dc7e); }
@@ -85,6 +87,7 @@
     @media (max-width: 600px) {
       .shell { padding-top: 12px; }
       .tab { font-size: .82rem; }
+      .cards { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
       .modal { display: block; }
       .art { display: block; height: auto; min-height: 0; max-height: 52vh; object-fit: contain; background: #080710; }
       .info { padding: 18px; }
@@ -232,6 +235,12 @@
     function imageFor(card, face) {
       return face?.image_uris?.normal || card.image_uris?.normal || card.card_faces?.find(item => item.image_uris)?.image_uris.normal || "";
     }
+    function thumbnailFor(card, face) {
+      return face?.image_uris?.small || card.image_uris?.small || card.card_faces?.find(item => item.image_uris)?.image_uris.small || imageFor(card, face);
+    }
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, character => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[character]);
+    }
     function render() {
       if (state.view === "value") return renderValue();
       const query = state.query.toLowerCase();
@@ -281,8 +290,9 @@
       const pt = analysis ? `${card.rarity.toUpperCase()} · Power ${analysis.power} · Pull ${analysis.pull} · Value ${analysis.value}` : (face ? `${face.power}/${face.toughness}` : speed(card));
       const name = face?.name || card.name;
       const mana = shownFace.mana_cost || card.mana_cost || "No mana";
-      return `<button class="card ${color.css}" data-entry="${index}" title="Open ${name}">
-        <span class="color-dot"></span><span class="name">${name}<small class="sub">${color.label} · ${pt}</small></span><span class="mana">${mana}</span></button>`;
+      return `<button class="card ${color.css}" data-entry="${index}" title="Open ${escapeHtml(name)}" aria-label="Open details for ${escapeHtml(name)}">
+        <img class="card-thumb" src="${escapeHtml(thumbnailFor(card, face))}" alt="${escapeHtml(name)} card" loading="lazy" decoding="async">
+        <span class="card-caption"><span class="color-dot"></span><span class="name">${escapeHtml(name)}<small class="sub">${escapeHtml(color.label)} · ${escapeHtml(pt)}</small><small class="mana">${escapeHtml(mana)}</small></span></span></button>`;
     }
     function openDetails({card, face}) {
       const shownFace = face || card;
@@ -296,7 +306,7 @@
         const analysis = valueEntry(card).analysis;
         tags.unshift(`Value ${analysis.value}`, `Pull ${analysis.pull}`, `Power ${analysis.power}`, `Mana value ${analysis.mv}`);
       }
-      document.querySelector("#detail-chips").innerHTML = [...new Set(tags)].map(tag => `<span class="chip">${tag}</span>`).join("");
+      document.querySelector("#detail-chips").innerHTML = [...new Set(tags)].map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join("");
       const art = document.querySelector("#art");
       art.src = imageFor(card, face); art.alt = `${face?.name || card.name} card artwork`;
       document.querySelector("#scryfall-link").href = card.scryfall_uri;
